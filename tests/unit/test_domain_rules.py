@@ -99,9 +99,7 @@ class TestEmploymentStatusTransitions:
             (EmploymentStatus.INACTIVE, False),
         ],
     )
-    def test_is_employed_classification(
-        self, status: EmploymentStatus, employed: bool
-    ) -> None:
+    def test_is_employed_classification(self, status: EmploymentStatus, employed: bool) -> None:
         assert status.is_employed is employed
 
     def test_suspended_is_still_payable(self) -> None:
@@ -381,17 +379,11 @@ class TestOverlapRules:
 
     def test_salary_structures_cannot_overlap(self) -> None:
         with pytest.raises(SalaryStructureOverlapError):
-            ensure_no_structure_overlap(
-                date(2026, 6, 1), None, [(date(2026, 1, 1), None)]
-            )
+            ensure_no_structure_overlap(date(2026, 6, 1), None, [(date(2026, 1, 1), None)])
 
     def test_an_open_ended_structure_blocks_everything_after_it(self) -> None:
         with pytest.raises(SalaryStructureOverlapError):
-            ensure_no_structure_overlap(
-                date(2030, 1, 1), None, [(date(2026, 1, 1), None)]
-            )
+            ensure_no_structure_overlap(date(2030, 1, 1), None, [(date(2026, 1, 1), None)])
 
     def test_a_closed_structure_leaves_room_after_it(self) -> None:
-        ensure_no_structure_overlap(
-            date(2026, 7, 1), None, [(date(2026, 1, 1), date(2026, 6, 30))]
-        )
+        ensure_no_structure_overlap(date(2026, 7, 1), None, [(date(2026, 1, 1), date(2026, 6, 30))])

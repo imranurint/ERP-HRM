@@ -59,9 +59,7 @@ async def run_payroll(
     run = await service.create_run(
         demo.company_id, PayrollRunCreate(payroll_period_id=period.id), actor
     )
-    run = await service.calculate(
-        demo.company_id, run.id, PayrollCalculateRequest(), actor
-    )
+    run = await service.calculate(demo.company_id, run.id, PayrollCalculateRequest(), actor)
     return service, period, run
 
 
@@ -177,9 +175,7 @@ class TestCalculation:
             )
             assert earnings == payslip.gross_salary
 
-    async def test_the_snapshot_is_stored(
-        self, session: AsyncSession, demo: DemoData
-    ) -> None:
+    async def test_the_snapshot_is_stored(self, session: AsyncSession, demo: DemoData) -> None:
         """Golden Rule 6 — the payslip must be explainable years later."""
         service, _, run = await run_payroll(session, demo)
         payslip = (await service.uow.payslips.list_for_run(run.id))[0]
@@ -206,9 +202,7 @@ class TestCalculation:
         item = next(i for i in refreshed.items if i.component_code == "HOUSING")
         assert item.component_name == "Housing Allowance"
 
-    async def test_absence_prorates_pay(
-        self, session: AsyncSession, demo: DemoData
-    ) -> None:
+    async def test_absence_prorates_pay(self, session: AsyncSession, demo: DemoData) -> None:
         actor = ActorContext()
         attendance = AttendanceService(UnitOfWork(session))
         await attendance.record_manual(
@@ -269,9 +263,7 @@ class TestApprovalAndPayment:
         refreshed_period = await service.get_period(demo.company_id, period.id)
         assert refreshed_period.status is PayrollPeriodStatus.PAID
 
-    async def test_cannot_approve_a_draft_run(
-        self, session: AsyncSession, demo: DemoData
-    ) -> None:
+    async def test_cannot_approve_a_draft_run(self, session: AsyncSession, demo: DemoData) -> None:
         service = PayrollService(UnitOfWork(session))
         actor = ActorContext()
         period = await service.create_period(demo.company_id, MARCH, actor)
@@ -281,9 +273,7 @@ class TestApprovalAndPayment:
         with pytest.raises(PayrollNotCalculatedError):
             await service.approve(demo.company_id, run.id, actor)
 
-    async def test_cannot_pay_before_approval(
-        self, session: AsyncSession, demo: DemoData
-    ) -> None:
+    async def test_cannot_pay_before_approval(self, session: AsyncSession, demo: DemoData) -> None:
         service, _, run = await run_payroll(session, demo)
         with pytest.raises(PayrollNotApprovedError):
             await service.pay(demo.company_id, run.id, ActorContext())
@@ -379,9 +369,7 @@ class TestPayslipVoiding:
 
 
 class TestAccountingHandoff:
-    async def test_the_journal_balances(
-        self, session: AsyncSession, demo: DemoData
-    ) -> None:
+    async def test_the_journal_balances(self, session: AsyncSession, demo: DemoData) -> None:
         """debits == credits, by construction."""
         service, _, run = await run_payroll(session, demo)
         preview = await service.approval_preview(demo.company_id, run.id)

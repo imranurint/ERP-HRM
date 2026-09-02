@@ -54,21 +54,15 @@ class TestDayCounting:
         assert count_leave_days(date(2026, 3, 6), date(2026, 3, 9)) == Decimal("2.00")
 
     def test_holidays_are_excluded(self) -> None:
-        days = count_leave_days(
-            date(2026, 3, 16), date(2026, 3, 18), holidays=[date(2026, 3, 17)]
-        )
+        days = count_leave_days(date(2026, 3, 16), date(2026, 3, 18), holidays=[date(2026, 3, 17)])
         assert days == Decimal("2.00")
 
     def test_calendar_day_leave_types_count_everything(self) -> None:
-        days = count_leave_days(
-            date(2026, 3, 6), date(2026, 3, 9), exclude_non_working=False
-        )
+        days = count_leave_days(date(2026, 3, 6), date(2026, 3, 9), exclude_non_working=False)
         assert days == Decimal("4.00")
 
     def test_half_days_count_as_a_half(self) -> None:
-        days = count_leave_days(
-            date(2026, 3, 2), date(2026, 3, 3), half_days=[date(2026, 3, 3)]
-        )
+        days = count_leave_days(date(2026, 3, 2), date(2026, 3, 3), half_days=[date(2026, 3, 3)])
         assert days == Decimal("1.50")
 
     def test_halves_add_up_exactly(self) -> None:
@@ -94,9 +88,7 @@ class TestBalanceIdentity:
         assert snapshot(earned="25", used="5").closing_balance == Decimal("20.00")
 
     def test_adjustment_can_be_negative(self) -> None:
-        assert snapshot(earned="25", used="5", adjustment="-2").closing_balance == Decimal(
-            "18.00"
-        )
+        assert snapshot(earned="25", used="5", adjustment="-2").closing_balance == Decimal("18.00")
 
     def test_available_subtracts_pending(self) -> None:
         """Two requests the same morning cannot both spend one remaining day."""
@@ -204,17 +196,13 @@ class TestStateMachine:
         ensure_not_self_approval("emp-1", None)
 
     def test_future_approved_leave_can_be_cancelled(self) -> None:
-        ensure_can_cancel(
-            LeaveRequestStatus.APPROVED, date(2026, 6, 1), today=date(2026, 3, 1)
-        )
+        ensure_can_cancel(LeaveRequestStatus.APPROVED, date(2026, 6, 1), today=date(2026, 3, 1))
 
     def test_started_approved_leave_cannot_be_cancelled(self) -> None:
         """Cancelling would silently return days actually taken; the correct
         remedy is an explicit, audited balance adjustment."""
         with pytest.raises(LeaveNotCancellableError):
-            ensure_can_cancel(
-                LeaveRequestStatus.APPROVED, date(2026, 3, 1), today=date(2026, 3, 5)
-            )
+            ensure_can_cancel(LeaveRequestStatus.APPROVED, date(2026, 3, 1), today=date(2026, 3, 5))
 
     def test_an_already_cancelled_request_cannot_be_cancelled_again(self) -> None:
         with pytest.raises(LeaveNotCancellableError):
@@ -254,15 +242,21 @@ class TestCarryForward:
         ) == Decimal("12.00")
 
     def test_disallowed_carry_forward_yields_nothing(self) -> None:
-        assert carry_forward_days(
-            closing_balance=Decimal("12"),
-            carry_forward_allowed=False,
-            carry_forward_limit=None,
-        ) == ZERO_DAYS
+        assert (
+            carry_forward_days(
+                closing_balance=Decimal("12"),
+                carry_forward_allowed=False,
+                carry_forward_limit=None,
+            )
+            == ZERO_DAYS
+        )
 
     def test_a_negative_balance_never_carries_forward(self) -> None:
-        assert carry_forward_days(
-            closing_balance=Decimal("-3"),
-            carry_forward_allowed=True,
-            carry_forward_limit=None,
-        ) == ZERO_DAYS
+        assert (
+            carry_forward_days(
+                closing_balance=Decimal("-3"),
+                carry_forward_allowed=True,
+                carry_forward_limit=None,
+            )
+            == ZERO_DAYS
+        )

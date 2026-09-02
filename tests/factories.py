@@ -254,17 +254,61 @@ class DemoData:
         """A deliberately mixed set: FIXED, PERCENTAGE and FORMULA, plus one
         of each component type, so the calculator is exercised end to end."""
         specs = [
-            ("HOUSING", "Housing Allowance", SalaryComponentType.EARNING,
-             CalculationType.PERCENTAGE, PercentageBase.BASE_SALARY, None, 10, True, "6010"),
-            ("TRANSPORT", "Transport Allowance", SalaryComponentType.EARNING,
-             CalculationType.FIXED, PercentageBase.BASE_SALARY, None, 20, True, "6020"),
-            ("OVERTIME", "Overtime", SalaryComponentType.EARNING,
-             CalculationType.FORMULA, PercentageBase.BASE_SALARY,
-             "overtime_hourly_1_5x", 30, True, "6030"),
-            ("PENSION", "Pension", SalaryComponentType.DEDUCTION,
-             CalculationType.PERCENTAGE, PercentageBase.GROSS_EARNINGS, None, 40, False, "2200"),
-            ("NI_ER", "Employer NI", SalaryComponentType.EMPLOYER_CONTRIBUTION,
-             CalculationType.PERCENTAGE, PercentageBase.GROSS_EARNINGS, None, 60, False, "6040"),
+            (
+                "HOUSING",
+                "Housing Allowance",
+                SalaryComponentType.EARNING,
+                CalculationType.PERCENTAGE,
+                PercentageBase.BASE_SALARY,
+                None,
+                10,
+                True,
+                "6010",
+            ),
+            (
+                "TRANSPORT",
+                "Transport Allowance",
+                SalaryComponentType.EARNING,
+                CalculationType.FIXED,
+                PercentageBase.BASE_SALARY,
+                None,
+                20,
+                True,
+                "6020",
+            ),
+            (
+                "OVERTIME",
+                "Overtime",
+                SalaryComponentType.EARNING,
+                CalculationType.FORMULA,
+                PercentageBase.BASE_SALARY,
+                "overtime_hourly_1_5x",
+                30,
+                True,
+                "6030",
+            ),
+            (
+                "PENSION",
+                "Pension",
+                SalaryComponentType.DEDUCTION,
+                CalculationType.PERCENTAGE,
+                PercentageBase.GROSS_EARNINGS,
+                None,
+                40,
+                False,
+                "2200",
+            ),
+            (
+                "NI_ER",
+                "Employer NI",
+                SalaryComponentType.EMPLOYER_CONTRIBUTION,
+                CalculationType.PERCENTAGE,
+                PercentageBase.GROSS_EARNINGS,
+                None,
+                60,
+                False,
+                "6040",
+            ),
         ]
         components: dict[str, SalaryComponent] = {}
         for code, name, kind, calc, base, formula, sequence, taxable, gl in specs:
@@ -320,9 +364,7 @@ class DemoData:
         company_id: UUID,
         leave_types: dict[str, LeaveType],
     ) -> LeavePolicy:
-        policy = LeavePolicy(
-            company_id=company_id, name="Standard Policy", is_active=True
-        )
+        policy = LeavePolicy(company_id=company_id, name="Standard Policy", is_active=True)
         uow.leave_policies.add(policy)
         await uow.flush()
         for code, entitlement in [

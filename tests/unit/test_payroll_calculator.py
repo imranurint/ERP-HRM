@@ -217,10 +217,20 @@ class TestEvaluationOrder:
         """Equal sequences tie-break on code, so the order never wobbles."""
         first = calculate(
             payroll_input(
-                component("BBB", SalaryComponentType.EARNING, CalculationType.FIXED,
-                          sequence=10, amount=Decimal("10")),
-                component("AAA", SalaryComponentType.EARNING, CalculationType.FIXED,
-                          sequence=10, amount=Decimal("20")),
+                component(
+                    "BBB",
+                    SalaryComponentType.EARNING,
+                    CalculationType.FIXED,
+                    sequence=10,
+                    amount=Decimal("10"),
+                ),
+                component(
+                    "AAA",
+                    SalaryComponentType.EARNING,
+                    CalculationType.FIXED,
+                    sequence=10,
+                    amount=Decimal("20"),
+                ),
             )
         )
         assert [line.component_code for line in first.lines] == ["BASIC", "AAA", "BBB"]
@@ -248,9 +258,7 @@ class TestProration:
     def test_half_a_month_halves_the_basic(self) -> None:
         result = calculate(
             payroll_input(
-                attendance=AttendanceSummary(
-                    working_days=Decimal("22"), payable_days=Decimal("11")
-                )
+                attendance=AttendanceSummary(working_days=Decimal("22"), payable_days=Decimal("11"))
             )
         )
         assert result.gross_salary == Decimal("2000.0000")
@@ -270,9 +278,7 @@ class TestProration:
         """Bad upstream data must never pay somebody more than their salary."""
         result = calculate(
             payroll_input(
-                attendance=AttendanceSummary(
-                    working_days=Decimal("22"), payable_days=Decimal("30")
-                )
+                attendance=AttendanceSummary(working_days=Decimal("22"), payable_days=Decimal("30"))
             )
         )
         assert result.gross_salary == Decimal("4000.0000")
@@ -374,11 +380,21 @@ class TestDeterminism:
     def test_identical_input_produces_identical_output(self) -> None:
         """Golden Rule 4. Recalculating an old period must reproduce it."""
         components = (
-            component("HOUSING", SalaryComponentType.EARNING, CalculationType.PERCENTAGE,
-                      sequence=10, percentage=Decimal("15")),
-            component("PENSION", SalaryComponentType.DEDUCTION, CalculationType.PERCENTAGE,
-                      sequence=40, percentage=Decimal("5"),
-                      base=PercentageBase.GROSS_EARNINGS),
+            component(
+                "HOUSING",
+                SalaryComponentType.EARNING,
+                CalculationType.PERCENTAGE,
+                sequence=10,
+                percentage=Decimal("15"),
+            ),
+            component(
+                "PENSION",
+                SalaryComponentType.DEDUCTION,
+                CalculationType.PERCENTAGE,
+                sequence=40,
+                percentage=Decimal("5"),
+                base=PercentageBase.GROSS_EARNINGS,
+            ),
         )
         first = calculate(payroll_input(*components))
         second = calculate(payroll_input(*components))
@@ -390,9 +406,7 @@ class TestDeterminism:
         """Golden Rule 6: the payslip must explain itself years later."""
         result = calculate(
             payroll_input(
-                attendance=AttendanceSummary(
-                    working_days=Decimal("22"), payable_days=Decimal("20")
-                )
+                attendance=AttendanceSummary(working_days=Decimal("22"), payable_days=Decimal("20"))
             )
         )
         assert result.snapshot["contractual_base_salary"] == "4000.00"

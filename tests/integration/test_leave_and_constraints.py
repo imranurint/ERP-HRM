@@ -106,7 +106,9 @@ class TestLeaveFlow:
             ActorContext(employee_id=demo.employee.id),
         )
         await service.reject(
-            demo.company_id, created.id, "Team is short-staffed",
+            demo.company_id,
+            created.id,
+            "Team is short-staffed",
             ActorContext(employee_id=demo.other_employee.id),
         )
 
@@ -163,9 +165,7 @@ class TestLeaveFlow:
         with pytest.raises(SelfApprovalError):
             await service.approve(demo.company_id, request_id, actor)
 
-    async def test_approving_twice_is_refused(
-        self, session: AsyncSession, demo: DemoData
-    ) -> None:
+    async def test_approving_twice_is_refused(self, session: AsyncSession, demo: DemoData) -> None:
         service = LeaveService(UnitOfWork(session))
         approver = ActorContext(employee_id=demo.other_employee.id)
         created = await service.create_request(
@@ -206,9 +206,7 @@ class TestLeaveFlow:
                 ActorContext(employee_id=demo.employee.id),
             )
 
-    async def test_approval_emits_an_event(
-        self, session: AsyncSession, demo: DemoData
-    ) -> None:
+    async def test_approval_emits_an_event(self, session: AsyncSession, demo: DemoData) -> None:
         service = LeaveService(UnitOfWork(session))
         created = await service.create_request(
             demo.company_id,
@@ -346,7 +344,7 @@ class TestDatabaseConstraints:
     async def test_salary_structures_cannot_overlap(
         self, session: AsyncSession, demo: DemoData
     ) -> None:
-        """"What was their salary on date X?" must have exactly one answer."""
+        """ "What was their salary on date X?" must have exactly one answer."""
         session.add(
             EmployeeSalaryStructure(
                 company_id=demo.company_id,
@@ -495,9 +493,7 @@ class TestSequences:
         from app.domain.shared.enums import DocumentType
 
         uow = UnitOfWork(session)
-        first = await uow.sequences.allocate_number(
-            demo.company_id, 2026, DocumentType.PAYROLL_RUN
-        )
+        first = await uow.sequences.allocate_number(demo.company_id, 2026, DocumentType.PAYROLL_RUN)
         second = await uow.sequences.allocate_number(
             demo.company_id, 2026, DocumentType.PAYROLL_RUN
         )
@@ -510,14 +506,10 @@ class TestSequences:
         from app.domain.shared.enums import DocumentType
 
         uow = UnitOfWork(session)
-        run = await uow.sequences.allocate_number(
-            demo.company_id, 2026, DocumentType.PAYROLL_RUN
-        )
+        run = await uow.sequences.allocate_number(demo.company_id, 2026, DocumentType.PAYROLL_RUN)
         assert run.startswith("PR-")
         # Employees were already allocated by the factory, so this continues
         # that sequence rather than restarting it.
-        employee = await uow.sequences.allocate_number(
-            demo.company_id, 2026, DocumentType.EMPLOYEE
-        )
+        employee = await uow.sequences.allocate_number(demo.company_id, 2026, DocumentType.EMPLOYEE)
         assert employee.startswith("EMP-")
         assert employee != "EMP-2026-000001"

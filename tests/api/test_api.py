@@ -87,9 +87,7 @@ class TestAuth:
         )
         assert unknown.json()["error"] == wrong.json()["error"] == "INVALID_CREDENTIALS"
 
-    async def test_me_returns_the_caller(
-        self, client: AsyncClient, auth: dict[str, str]
-    ) -> None:
+    async def test_me_returns_the_caller(self, client: AsyncClient, auth: dict[str, str]) -> None:
         response = await client.get("/api/v1/auth/me", headers=auth)
         assert response.status_code == 200
         assert response.json()["email"] == "apitest.admin@test.example"
@@ -402,9 +400,7 @@ class TestPayrollOverHttp:
         assert preview.status_code == 200
         assert preview.json()["balanced"] is True
 
-        approved = await client.post(
-            f"/api/v1/payroll-runs/{run_id}/approve{base}", headers=auth
-        )
+        approved = await client.post(f"/api/v1/payroll-runs/{run_id}/approve{base}", headers=auth)
         assert approved.status_code == 200
         assert approved.json()["status"] == "APPROVED"
 
@@ -532,8 +528,7 @@ class TestReports:
         self, client: AsyncClient, auth: dict[str, str], demo: DemoData
     ) -> None:
         response = await client.get(
-            f"/api/v1/reports/employee-directory?company_id={demo.company_id}"
-            "&response_format=csv",
+            f"/api/v1/reports/employee-directory?company_id={demo.company_id}&response_format=csv",
             headers=auth,
         )
         assert response.status_code == 200
@@ -576,9 +571,7 @@ class TestPermissions:
     """Authorisation is checked here rather than repeated in every test."""
 
     @pytest.fixture
-    async def viewer(
-        self, client: AsyncClient, session: AsyncSession
-    ) -> dict[str, str]:
+    async def viewer(self, client: AsyncClient, session: AsyncSession) -> dict[str, str]:
         from app.core.security import hash_password
         from app.domain.identity.permissions import Role
         from app.infrastructure.database.models.identity import User
