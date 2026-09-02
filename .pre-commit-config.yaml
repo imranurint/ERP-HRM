@@ -1,0 +1,43 @@
+default_language_version:
+  python: python3.12
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        files: ^app/
+        additional_dependencies:
+          - pydantic>=2.9
+          - sqlalchemy[mypy]>=2.0.36
+          - types-python-dateutil
+        args: [--config-file=pyproject.toml]
+
+  # Guard rail: payroll money must never be a float in this codebase.
+  - repo: local
+    hooks:
+      - id: no-float-money
+        name: reject float() on monetary values
+        entry: '(?i)\bfloat\s*\(\s*(amount|salary|gross|net|deduction|allowance|tax|contribution|balance|total|money)'
+        language: pygrep
+        files: ^app/.*\.py$

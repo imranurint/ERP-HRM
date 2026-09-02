@@ -1,0 +1,95 @@
+name: erp-hrm-core
+
+# Host port defaults are 5433 / 6380 / 8001, not the usual 5432 / 6379 / 8000.
+# This host already runs PostgreSQL and Redis, and the sibling Accounting stack
+# claims the conventional ports. Override in .env if your host differs.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hrm}
+      POSTGRES_DB: ${POSTGRES_DB:-hrm}
+      # Deterministic collation keeps employee-number ordering stable across hosts.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hrm} -d ${POSTGRES_DB:-hrm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Runs migrations to completion, then exits. `api` waits for it.
+  migration:
+    build:
+      context: .
+      target: runtime
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      SECRET_KEY: ${SECRET_KEY:-local-development-secret-key-change-me-please}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-hrm}:${POSTGRES_PASSWORD:-hrm}@postgres:5432/${POSTGRES_DB:-hrm}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "${API_PORT:-8001}:8000"
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      DEBUG: ${DEBUG:-true}
+      SECRET_KEY: ${SECRET_KEY:-local-development-secret-key-change-me-please}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-hrm}:${POSTGRES_PASSWORD:-hrm}@postgres:5432/${POSTGRES_DB:-hrm}
+      REDIS_URL: redis://redis:6379/0
+      LOG_JSON: ${LOG_JSON:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      OPENAPI_ENABLED: ${OPENAPI_ENABLED:-true}
+      METRICS_ENABLED: "true"
+      OTEL_ENABLED: ${OTEL_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000"]}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/livez"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
