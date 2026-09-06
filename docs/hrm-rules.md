@@ -3,7 +3,7 @@
 Employee lifecycle, attendance and leave. Payroll has its own document:
 [`payroll-rules.md`](payroll-rules.md).
 
-Every rule here is an executable guard in `app/domain/`, and every mutation
+Every rule here is an executable guard in a module's `domain/`, and every mutation
 calls one.
 
 ## Employee lifecycle
@@ -38,7 +38,7 @@ everywhere.
 ```
 
 `ALLOWED_STATUS_TRANSITIONS` in
-[`app/domain/employees/rules.py`](../app/domain/employees/rules.py) is the
+[`app/modules/employees/domain/rules.py`](../app/modules/employees/domain/rules.py) is the
 authority. Anything not listed is rejected.
 
 **`TERMINATED` and `RESIGNED` are terminal.** A returning employee is a

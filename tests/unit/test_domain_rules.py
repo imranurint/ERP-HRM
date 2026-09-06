@@ -12,9 +12,9 @@ from uuid import uuid4
 import pytest
 
 from app.core.dates import days_inclusive, is_weekend, minutes_between, spans_midnight
-from app.domain.attendance.enums import AttendanceStatus
-from app.domain.attendance.exceptions import InvalidAttendanceWindowError, InvalidShiftError
-from app.domain.attendance.rules import (
+from app.modules.attendance.domain.enums import AttendanceStatus
+from app.modules.attendance.domain.exceptions import InvalidAttendanceWindowError, InvalidShiftError
+from app.modules.attendance.domain.rules import (
     ShiftDefinition,
     compute,
     ensure_shift_valid,
@@ -22,15 +22,15 @@ from app.domain.attendance.rules import (
     overtime_minutes,
     payable_day_fraction,
 )
-from app.domain.employees.enums import ContractStatus, ContractType, EmploymentStatus
-from app.domain.employees.exceptions import (
+from app.modules.employees.domain.enums import ContractStatus, ContractType, EmploymentStatus
+from app.modules.employees.domain.exceptions import (
     ContractImmutableError,
     InvalidContractError,
     InvalidEmploymentStatusError,
     InvalidHierarchyError,
     InvalidManagerError,
 )
-from app.domain.employees.rules import (
+from app.modules.employees.domain.rules import (
     contract_status_on,
     ensure_contract_dates,
     ensure_contract_mutable,
@@ -40,8 +40,8 @@ from app.domain.employees.rules import (
     ensure_status_transition,
     ensure_termination_date,
 )
-from app.domain.payroll.enums import PayrollRunStatus, PayslipStatus
-from app.domain.payroll.exceptions import (
+from app.modules.payroll.domain.enums import PayrollRunStatus, PayslipStatus
+from app.modules.payroll.domain.exceptions import (
     PayrollAlreadyApprovedError,
     PayrollAlreadyPaidError,
     PayrollNotApprovedError,
@@ -50,7 +50,7 @@ from app.domain.payroll.exceptions import (
     PayslipCannotBeModifiedError,
     SalaryStructureOverlapError,
 )
-from app.domain.payroll.rules import (
+from app.modules.payroll.domain.rules import (
     ensure_can_approve,
     ensure_can_pay,
     ensure_no_period_overlap,

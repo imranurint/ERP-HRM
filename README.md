@@ -54,7 +54,7 @@ Docker:
 
 ```bash
 make docker-up
-docker compose exec api python -m app.scripts.seed
+docker compose exec api python -m scripts.seed
 ```
 
 Quality gates:
@@ -68,19 +68,31 @@ make test     # full suite (needs Docker, or USE_EXISTING_DATABASE=true)
 
 ```
 app/
-  api/v1/           FastAPI routers — authenticate, authorise, parse, delegate.
-                    Zero business logic.
-  application/      Use-case services, schemas. Owns transaction boundaries.
-  domain/           Entities, enums, rules, events. Pure Python, no I/O.
-  infrastructure/   ORM models, repositories, Unit of Work, cache, outbox,
-                    observability.
-  scripts/          seed, create_admin, rebuild_leave_balances
+├── main.py · api.py · health.py
+├── core/            config · security · money · dates · ids · pagination
+│                    exceptions · middleware · dependencies
+├── shared/          database · unit_of_work · audit · events · outbox
+│                    sequences · cache · observability
+└── modules/         each: domain/ application/ infrastructure/ api/
+    ├── identity/        users, roles, permissions, refresh tokens
+    ├── organization/    companies, departments, designations, locations, holidays
+    ├── employees/       employee lifecycle and employment contracts
+    ├── salary/          components, structures, the formula registry
+    ├── attendance/      shifts, assignments, attendance records
+    ├── leave/           types, policies, requests, transactions, balances
+    ├── payroll/         periods, runs, payslips, the calculator
+    └── reports/         read-only aggregations, JSON and CSV
+scripts/            seed, create_admin, rebuild_leave_balances
 docs/               architecture, hrm-rules, payroll-rules, api-examples
 tests/              unit (no DB) · integration (real PostgreSQL) · api
 ```
 
-Dependencies point inward. `app/domain/` imports nothing from the layers around
-it, which is why 119 of the 213 tests need no database at all.
+A module is a vertical slice, not a quarter of four horizontal layers:
+understanding leave means opening one directory. This is the same layout as the
+sibling [`../Core`](../Core) sales and inventory module.
+
+Dependencies point inward. A module's `domain/` imports nothing from the layers
+around it, which is why 119 of the 213 tests need no database at all.
 
 ## Documentation
 
@@ -115,8 +127,8 @@ Everything below was actually executed, not assumed:
 * `alembic upgrade head` on a fresh database, single migration
   `0001_initial_schema`; `alembic check` reports no drift
 * `pytest` → **213 passed**, 70% coverage, against real PostgreSQL 16
-* `python -m app.scripts.seed` → ran, and ran again idempotently
-* `python -m app.scripts.rebuild_leave_balances --all --verify` →
+* `python -m scripts.seed` → ran, and ran again idempotently
+* `python -m scripts.rebuild_leave_balances --all --verify` →
   `matched_previous=True`
 * Live API run: employee created with an allocated number; leave requested
   (Fri→Mon counted as 2 days), approved, balance moved 25 → 23; payroll run
@@ -142,7 +154,7 @@ definite and puts HR in control of what "so far" includes, instead of resolving
 a dependency graph whose meaning would change as components are added.
 
 **Formulas are registered Python, not expression strings.** A `FORMULA`
-component names a calculator in `app/domain/payroll/formulas.py`. An expression
+component names a calculator in `app/modules/payroll/domain/formulas.py`. An expression
 column would mean `eval` — arbitrary code execution driven by a database row —
 or a bespoke parser with its own bugs. Neither belongs in something that
 decides what people get paid.

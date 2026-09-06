@@ -18,24 +18,18 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.employees.enums import ContractStatus, ContractType, EmploymentStatus
-from app.domain.leave.enums import LeaveTransactionType
-from app.domain.payroll.enums import (
-    CalculationType,
-    PercentageBase,
-    SalaryComponentType,
-    SalaryStructureStatus,
-)
-from app.infrastructure.database.models.attendance import EmployeeShiftAssignment, Shift
-from app.infrastructure.database.models.employee import Employee, EmploymentContract
-from app.infrastructure.database.models.leave import (
+from app.modules.attendance.infrastructure.models import EmployeeShiftAssignment, Shift
+from app.modules.employees.domain.enums import ContractStatus, ContractType, EmploymentStatus
+from app.modules.employees.infrastructure.models import Employee, EmploymentContract
+from app.modules.leave.domain.enums import LeaveTransactionType
+from app.modules.leave.infrastructure.models import (
     EmployeeLeavePolicy,
     LeavePolicy,
     LeavePolicyRule,
     LeaveTransaction,
     LeaveType,
 )
-from app.infrastructure.database.models.organization import (
+from app.modules.organization.infrastructure.models import (
     Company,
     Currency,
     Department,
@@ -43,12 +37,18 @@ from app.infrastructure.database.models.organization import (
     Holiday,
     Location,
 )
-from app.infrastructure.database.models.salary import (
+from app.modules.payroll.domain.enums import (
+    CalculationType,
+    PercentageBase,
+    SalaryComponentType,
+    SalaryStructureStatus,
+)
+from app.modules.salary.infrastructure.models import (
     EmployeeSalaryComponent,
     EmployeeSalaryStructure,
     SalaryComponent,
 )
-from app.infrastructure.database.unit_of_work import UnitOfWork
+from app.shared.unit_of_work.unit_of_work import UnitOfWork
 
 YEAR = 2026
 HIRE_DATE = date(YEAR, 1, 5)
@@ -466,7 +466,7 @@ async def make_admin_token(client: object, session: AsyncSession) -> str:
     them would be noise. Permission enforcement has its own dedicated tests.
     """
     from app.core.security import hash_password
-    from app.infrastructure.database.models.identity import User
+    from app.modules.identity.infrastructure.models import User
 
     uow = UnitOfWork(session)
     user = User(

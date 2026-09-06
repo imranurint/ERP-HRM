@@ -55,16 +55,16 @@ revision: ## Autogenerate a migration: make revision m="add x"
 
 .PHONY: seed
 seed: ## Seed demo company, org structure, employees, policies and users
-	$(RUN) python -m app.scripts.seed
+	$(RUN) python -m scripts.seed
 
 .PHONY: create-admin
 create-admin: ## Create the first admin: make create-admin email=a@b.com
 	@test -n "$(email)" || (echo 'usage: make create-admin email=admin@example.com'; exit 1)
-	$(RUN) python -m app.scripts.create_admin --email "$(email)"
+	$(RUN) python -m scripts.create_admin --email "$(email)"
 
 .PHONY: rebuild-leave-balances
 rebuild-leave-balances: ## Rebuild leave_balances from leave_transactions (all companies)
-	$(RUN) python -m app.scripts.rebuild_leave_balances --all --verify
+	$(RUN) python -m scripts.rebuild_leave_balances --all --verify
 
 # ----------------------------------------------------------------------- run
 .PHONY: run

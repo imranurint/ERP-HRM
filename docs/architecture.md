@@ -16,44 +16,79 @@ seams are already drawn along the domain boundaries below.
 
 ## Layers
 
-Dependencies point inward. Nothing in an inner layer imports from an outer one.
+Dependencies point inward. Nothing in an inner layer imports from an outer one,
+and nothing in `domain/` imports SQLAlchemy, FastAPI or another module.
 
 ```
-app/api/v1/          HTTP. Authenticate, authorise, parse, delegate, return.
-                     Zero business logic.
-        ↓
-app/application/     Use-case services, schemas, commands.
-                     Owns transaction boundaries.
-        ↓
-app/domain/          Entities, enums, rules, events.
-                     Pure Python. No SQLAlchemy, no FastAPI, no I/O.
-        ↑
-app/infrastructure/  ORM models, repositories, Unit of Work, cache, outbox,
-                     observability. Implements what the layers above need.
+        api/            HTTP. Authenticate, authorise, parse, delegate, return.
+         │              Zero business logic.
+         ▼
+    application/        Use-case services, schemas, commands.
+         │              Owns transaction boundaries.
+         ▼
+      domain/           Entities, enums, rules, events.
+         ▲              Pure Python. No SQLAlchemy, no FastAPI, no I/O.
+         │
+   infrastructure/      ORM models and repositories. Implements what the
+                        layers above need.
 ```
 
-`app/domain/` is the part that matters most. Every invariant — the employment
+Those four layers repeat *inside each module*, so a module is a vertical slice
+rather than a quarter of four horizontal ones. Understanding leave means
+opening one directory:
+
+```
+app/
+├── main.py · api.py · health.py
+├── core/                     config · security · money · dates · ids
+│                             pagination · exceptions · middleware · dependencies
+├── shared/                   database · unit_of_work · audit · events · outbox
+│                             sequences · cache · observability
+└── modules/                  each: domain/ application/ infrastructure/ api/
+    ├── identity/             users, roles, permissions, refresh tokens
+    ├── organization/         companies, currencies, departments, designations,
+    │                         locations, holidays
+    ├── employees/            employee lifecycle and employment contracts
+    ├── salary/               components, structures, the formula registry
+    ├── attendance/           shifts, assignments, attendance records
+    ├── leave/                types, policies, requests, transactions, balances
+    ├── payroll/              periods, runs, payslips, the calculator
+    └── reports/              read-only aggregations, JSON and CSV
+```
+
+`domain/` is the part that matters most. Every invariant — the employment
 status graph, leave day counting, the payslip calculator, the payroll Golden
 Rules — is a pure function over plain values. That is what makes them testable
 without a database (119 of the 213 tests need no PostgreSQL at all) and
 reusable from a bulk import or a scheduled job that never goes near HTTP.
 
-### Domain boundaries
+This is the same layout as the sibling [`../Core`](../../Core) sales and
+inventory module, so a developer moving between the two ERP services finds the
+same file in the same place.
+
+### Module ownership
+
+Each concept has exactly one owner. Everything else references it by id.
 
 | Module | Owns |
 | --- | --- |
-| `domain/identity` | Users, roles, permissions, the authenticated caller |
-| `domain/organization` | Companies, departments, designations, locations |
-| `domain/employees` | Employee lifecycle, contracts, hierarchies |
-| `domain/attendance` | Shifts, check-in/out arithmetic, day classification |
-| `domain/leave` | Leave types, policies, day counting, balance arithmetic |
-| `domain/payroll` | Salary structures, the calculator, formulas, Golden Rules |
-| `domain/shared` | Cross-cutting enums and the domain event catalogue |
+| `identity` | users, roles, permissions, refresh tokens, the authenticated caller |
+| `organization` | companies, currencies, departments, designations, locations, holidays |
+| `employees` | employee lifecycle, employment contracts, hierarchies |
+| `salary` | salary components, salary structures, the formula registry |
+| `attendance` | shifts, check-in/out arithmetic, day classification |
+| `leave` | leave types, policies, day counting, balance arithmetic |
+| `payroll` | payroll periods, runs, payslips, the calculator, the Golden Rules |
+| `reports` | nothing — read-only aggregations over the modules above |
+
+`app/shared/` holds what genuinely belongs to no single module: the Unit of
+Work, the audit log, the outbox, document sequences, the money/day wire types
+and the domain event catalogue.
 
 ## Repository pattern and Unit of Work
 
-Repositories own SQL. Application services own orchestration. Nothing above
-`app/infrastructure/` imports SQLAlchemy, which is what keeps the domain
+Repositories own SQL. Application services own orchestration. Nothing above a
+module's `infrastructure/` imports SQLAlchemy, which is what keeps the domain
 testable and lets the persistence strategy change without rewriting the rules.
 
 **One UoW == one database transaction == one HR operation.** A payroll run
@@ -125,7 +160,7 @@ requests arrive at once and both pass the check.
 
 Four properties, each with a mechanism behind it:
 
-**Deterministic.** `app/domain/payroll/calculator.py` is a pure function.
+**Deterministic.** `app/modules/payroll/domain/calculator.py` is a pure function.
 Given the same `PayrollInput` it produces byte-identical output on any machine,
 forever. No clock, no randomness, no configuration lookups, no database.
 
@@ -157,7 +192,7 @@ exist. This way the answer is always visible in the sequence numbers.
 ### Formulas are code, not data
 
 A `FORMULA` component names a calculator registered in
-`app/domain/payroll/formulas.py`. It does **not** carry an expression string.
+`app/modules/payroll/domain/formulas.py`. It does **not** carry an expression string.
 
 An expression column would mean either `eval` — arbitrary code execution driven
 by a database row — or a bespoke mini-language with its own parser, its own

@@ -15,27 +15,27 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.context import ActorContext
-from app.application.leave.schemas import (
+from app.modules.employees.domain.enums import ContractStatus, ContractType
+from app.modules.employees.infrastructure.models import EmploymentContract
+from app.modules.leave.application.schemas import (
     BalanceAdjustmentRequest,
     LeaveRequestCreate,
 )
-from app.application.leave.service import LeaveService
-from app.domain.employees.enums import ContractStatus, ContractType
-from app.domain.leave.enums import LeaveRequestStatus, LeaveTransactionType
-from app.domain.leave.exceptions import (
+from app.modules.leave.application.service import LeaveService
+from app.modules.leave.domain.enums import LeaveRequestStatus, LeaveTransactionType
+from app.modules.leave.domain.exceptions import (
     LeaveBalanceInsufficientError,
     LeaveNotPendingError,
     LeaveOverlapError,
     SelfApprovalError,
 )
-from app.domain.leave.rules import replay
-from app.domain.payroll.enums import SalaryStructureStatus
-from app.infrastructure.database.models.employee import EmploymentContract
-from app.infrastructure.database.models.leave import EmployeeLeavePolicy
-from app.infrastructure.database.models.salary import EmployeeSalaryStructure
-from app.infrastructure.database.unit_of_work import UnitOfWork
-from app.infrastructure.outbox.models import OutboxEvent
+from app.modules.leave.domain.rules import replay
+from app.modules.leave.infrastructure.models import EmployeeLeavePolicy
+from app.modules.payroll.domain.enums import SalaryStructureStatus
+from app.modules.salary.infrastructure.models import EmployeeSalaryStructure
+from app.shared.context import ActorContext
+from app.shared.outbox.models import OutboxEvent
+from app.shared.unit_of_work.unit_of_work import UnitOfWork
 from tests.factories import DemoData
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -273,7 +273,7 @@ class TestBalanceProjection:
         self, session: AsyncSession, demo: DemoData
     ) -> None:
         """Try to write an arithmetically impossible balance directly."""
-        from app.infrastructure.database.models.leave import LeaveBalance
+        from app.modules.leave.infrastructure.models import LeaveBalance
 
         session.add(
             LeaveBalance(
@@ -377,8 +377,8 @@ class TestDatabaseConstraints:
     async def test_employee_number_is_unique_per_company(
         self, session: AsyncSession, demo: DemoData
     ) -> None:
-        from app.domain.employees.enums import EmploymentStatus
-        from app.infrastructure.database.models.employee import Employee
+        from app.modules.employees.domain.enums import EmploymentStatus
+        from app.modules.employees.infrastructure.models import Employee
 
         session.add(
             Employee(
@@ -400,8 +400,8 @@ class TestDatabaseConstraints:
         self, session: AsyncSession, demo: DemoData
     ) -> None:
         """The CHECK that stops headcount reports drifting from reality."""
-        from app.domain.employees.enums import EmploymentStatus
-        from app.infrastructure.database.models.employee import Employee
+        from app.modules.employees.domain.enums import EmploymentStatus
+        from app.modules.employees.infrastructure.models import Employee
 
         session.add(
             Employee(
@@ -423,8 +423,8 @@ class TestDatabaseConstraints:
     async def test_a_terminal_status_requires_a_termination_date(
         self, session: AsyncSession, demo: DemoData
     ) -> None:
-        from app.domain.employees.enums import EmploymentStatus
-        from app.infrastructure.database.models.employee import Employee
+        from app.modules.employees.domain.enums import EmploymentStatus
+        from app.modules.employees.infrastructure.models import Employee
 
         session.add(
             Employee(
@@ -446,8 +446,12 @@ class TestDatabaseConstraints:
     async def test_a_payslip_net_must_equal_gross_minus_deductions(
         self, session: AsyncSession, demo: DemoData
     ) -> None:
-        from app.domain.payroll.enums import PayrollPeriodStatus, PayrollRunStatus, PayslipStatus
-        from app.infrastructure.database.models.payroll import PayrollPeriod, PayrollRun, Payslip
+        from app.modules.payroll.domain.enums import (
+            PayrollPeriodStatus,
+            PayrollRunStatus,
+            PayslipStatus,
+        )
+        from app.modules.payroll.infrastructure.models import PayrollPeriod, PayrollRun, Payslip
 
         period = PayrollPeriod(
             company_id=demo.company_id,
@@ -490,7 +494,7 @@ class TestSequences:
     async def test_numbers_are_allocated_without_gaps_under_normal_use(
         self, session: AsyncSession, demo: DemoData
     ) -> None:
-        from app.domain.shared.enums import DocumentType
+        from app.shared.enums import DocumentType
 
         uow = UnitOfWork(session)
         first = await uow.sequences.allocate_number(demo.company_id, 2026, DocumentType.PAYROLL_RUN)
@@ -503,7 +507,7 @@ class TestSequences:
     async def test_sequences_are_independent_per_document_type(
         self, session: AsyncSession, demo: DemoData
     ) -> None:
-        from app.domain.shared.enums import DocumentType
+        from app.shared.enums import DocumentType
 
         uow = UnitOfWork(session)
         run = await uow.sequences.allocate_number(demo.company_id, 2026, DocumentType.PAYROLL_RUN)

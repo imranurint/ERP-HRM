@@ -573,10 +573,10 @@ class TestPermissions:
     @pytest.fixture
     async def viewer(self, client: AsyncClient, session: AsyncSession) -> dict[str, str]:
         from app.core.security import hash_password
-        from app.domain.identity.permissions import Role
-        from app.infrastructure.database.models.identity import User
-        from app.infrastructure.database.unit_of_work import UnitOfWork
-        from app.scripts.create_admin import ensure_roles_and_permissions
+        from app.modules.identity.domain.permissions import Role
+        from app.modules.identity.infrastructure.models import User
+        from app.shared.unit_of_work.unit_of_work import UnitOfWork
+        from scripts.create_admin import ensure_roles_and_permissions
 
         uow = UnitOfWork(session)
         roles = await ensure_roles_and_permissions(uow)

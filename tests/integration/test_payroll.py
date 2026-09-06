@@ -13,20 +13,19 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.attendance.schemas import ManualAttendanceRequest
-from app.application.attendance.service import AttendanceService
-from app.application.context import ActorContext
-from app.application.payroll.schemas import (
+from app.modules.attendance.application.schemas import ManualAttendanceRequest
+from app.modules.attendance.application.service import AttendanceService
+from app.modules.attendance.domain.enums import AttendanceStatus
+from app.modules.attendance.domain.exceptions import AttendanceLockedError
+from app.modules.payroll.application.schemas import (
     PayrollCalculateRequest,
     PayrollPeriodCreate,
     PayrollRunCreate,
     VoidPayslipRequest,
 )
-from app.application.payroll.service import PayrollService
-from app.domain.attendance.enums import AttendanceStatus
-from app.domain.attendance.exceptions import AttendanceLockedError
-from app.domain.payroll.enums import PayrollPeriodStatus, PayrollRunStatus, PayslipStatus
-from app.domain.payroll.exceptions import (
+from app.modules.payroll.application.service import PayrollService
+from app.modules.payroll.domain.enums import PayrollPeriodStatus, PayrollRunStatus, PayslipStatus
+from app.modules.payroll.domain.exceptions import (
     PayrollAlreadyApprovedError,
     PayrollAlreadyPaidError,
     PayrollNotApprovedError,
@@ -34,9 +33,10 @@ from app.domain.payroll.exceptions import (
     PayrollPeriodOverlapError,
     PayrollRunInProgressError,
 )
-from app.infrastructure.database.models.payroll import Payslip
-from app.infrastructure.database.unit_of_work import UnitOfWork
-from app.infrastructure.outbox.models import OutboxEvent
+from app.modules.payroll.infrastructure.models import Payslip
+from app.shared.context import ActorContext
+from app.shared.outbox.models import OutboxEvent
+from app.shared.unit_of_work.unit_of_work import UnitOfWork
 from tests.factories import DemoData
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -89,7 +89,7 @@ class TestPeriods:
         the line — that is what protects against two concurrent inserts."""
         from sqlalchemy.exc import IntegrityError
 
-        from app.infrastructure.database.models.payroll import PayrollPeriod
+        from app.modules.payroll.infrastructure.models import PayrollPeriod
 
         service = PayrollService(UnitOfWork(session))
         await service.create_period(demo.company_id, MARCH, ActorContext())
@@ -164,7 +164,7 @@ class TestCalculation:
     async def test_payslip_items_sum_to_the_payslip_totals(
         self, session: AsyncSession, demo: DemoData
     ) -> None:
-        from app.domain.payroll.enums import SalaryComponentType
+        from app.modules.payroll.domain.enums import SalaryComponentType
 
         service, _, run = await run_payroll(session, demo)
         for payslip in await service.uow.payslips.list_for_run(run.id):

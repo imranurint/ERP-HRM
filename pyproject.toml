@@ -59,7 +59,7 @@ packages = ["app"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["app", "tests"]
+src = ["app", "tests", "scripts"]
 
 [tool.ruff.lint]
 select = [
@@ -86,11 +86,11 @@ ignore = [
 allowed-confusables = ["–", "—", "×"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "tests"]
+known-first-party = ["app", "tests", "scripts"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["T20", "RUF012", "ANN001"]
-"app/scripts/*" = ["T20"]
+"scripts/*" = ["T20"]
 "alembic/versions/*" = ["E501"]
 
 # ---------------------------------------------------------------- mypy
@@ -133,7 +133,7 @@ markers = [
 [tool.coverage.run]
 source = ["app"]
 branch = true
-omit = ["app/scripts/*", "alembic/*"]
+omit = ["scripts/*", "alembic/*"]
 
 [tool.coverage.report]
 show_missing = true

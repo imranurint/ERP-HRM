@@ -17,8 +17,8 @@ from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from app.api.v1 import health
-from app.api.v1.router import api_router
+from app import health
+from app.api import api_router
 from app.core.config import settings
 from app.core.exceptions import AppError
 from app.core.logging import configure_logging, get_logger
@@ -27,10 +27,10 @@ from app.core.middleware import (
     RateLimitMiddleware,
     RequestContextMiddleware,
 )
-from app.infrastructure.cache.redis import close_redis
-from app.infrastructure.database.session import dispose_engine
-from app.infrastructure.observability import metrics
-from app.infrastructure.observability.tracing import setup_sentry, setup_tracing
+from app.shared.cache.redis import close_redis
+from app.shared.database.session import dispose_engine
+from app.shared.observability import metrics
+from app.shared.observability.tracing import setup_sentry, setup_tracing
 
 logger = get_logger(__name__)
 

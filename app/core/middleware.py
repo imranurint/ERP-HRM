@@ -128,8 +128,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if request.url.path in {"/healthz", "/livez", "/readyz", "/metrics"}:
             return await call_next(request)
 
-        from app.infrastructure.cache.keys import rate_limit_key
-        from app.infrastructure.cache.redis import get_redis
+        from app.shared.cache.keys import rate_limit_key
+        from app.shared.cache.redis import get_redis
 
         identity = request.headers.get("authorization") or (
             request.client.host if request.client else "anonymous"

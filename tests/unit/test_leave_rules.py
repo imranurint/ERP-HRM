@@ -7,8 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.domain.leave.enums import LeaveRequestStatus, LeaveTransactionType
-from app.domain.leave.exceptions import (
+from app.modules.leave.domain.enums import LeaveRequestStatus, LeaveTransactionType
+from app.modules.leave.domain.exceptions import (
     InvalidLeaveDatesError,
     LeaveBalanceInsufficientError,
     LeaveExceedsAnnualLimitError,
@@ -17,7 +17,7 @@ from app.domain.leave.exceptions import (
     LeaveOverlapError,
     SelfApprovalError,
 )
-from app.domain.leave.rules import (
+from app.modules.leave.domain.rules import (
     ZERO_DAYS,
     LeaveBalanceSnapshot,
     apply_transaction,

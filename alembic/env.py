@@ -15,7 +15,7 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import settings
 
 # Importing the model registry populates Base.metadata for autogenerate.
-from app.infrastructure.database.models import Base  # noqa: F401
+from app.shared.database.models import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.sync_database_url)

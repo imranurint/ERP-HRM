@@ -1,7 +1,7 @@
 # Payroll rules
 
 Every rule here has an executable guard in
-[`app/domain/payroll/rules.py`](../app/domain/payroll/rules.py), and every
+[`app/modules/payroll/domain/rules.py`](../app/modules/payroll/domain/rules.py), and every
 payroll mutation calls one. This document explains *why*; the code is the
 authority on *what*.
 
@@ -32,7 +32,7 @@ Editing them in place would break reconciliation with no trace.
 
 ### Rule 4 — payroll calculations must be deterministic
 
-`app/domain/payroll/calculator.py` is a pure function. No clock, no
+`app/modules/payroll/domain/calculator.py` is a pure function. No clock, no
 randomness, no configuration lookups, no I/O. The same `PayrollInput` produces
 byte-identical output on any machine, forever.
 
@@ -208,7 +208,7 @@ and re-run, not abandoned.
 
 ## What a deployment is expected to change
 
-The shipped formulas in `app/domain/payroll/formulas.py` are illustrative but
+The shipped formulas in `app/modules/payroll/domain/formulas.py` are illustrative but
 real — overtime at time-and-a-half, absence deduction at the daily rate, and a
 three-band progressive tax. **Replace the tax formula with your jurisdiction's
 own registered formula.** The bands are hardcoded deliberately: real tax codes

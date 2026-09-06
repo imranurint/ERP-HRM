@@ -13,14 +13,14 @@ from uuid import uuid4
 import pytest
 
 from app.core.money import allocate, percentage_of, quantize_currency
-from app.domain.payroll.calculator import (
+from app.modules.payroll.domain.calculator import (
     AttendanceSummary,
     PayrollInput,
     ResolvedComponent,
     calculate,
 )
-from app.domain.payroll.enums import CalculationType, PercentageBase, SalaryComponentType
-from app.domain.payroll.exceptions import NegativeNetPayError, SalaryComponentInvalidError
+from app.modules.payroll.domain.enums import CalculationType, PercentageBase, SalaryComponentType
+from app.modules.payroll.domain.exceptions import NegativeNetPayError, SalaryComponentInvalidError
 
 pytestmark = pytest.mark.unit
 
@@ -328,7 +328,7 @@ class TestFormulas:
         assert overtime.amount == Decimal("0.0000")
 
     def test_unknown_formula_is_rejected(self) -> None:
-        from app.domain.payroll.exceptions import UnknownFormulaError
+        from app.modules.payroll.domain.exceptions import UnknownFormulaError
 
         with pytest.raises(UnknownFormulaError):
             calculate(

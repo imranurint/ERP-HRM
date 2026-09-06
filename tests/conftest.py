@@ -87,7 +87,7 @@ def configure_environment(database_url: str) -> Iterator[None]:
 @pytest_asyncio.fixture(scope="session")
 async def engine(configure_environment: None, database_url: str) -> AsyncIterator[AsyncEngine]:
     """Session-scoped engine with the schema applied via Alembic."""
-    from app.infrastructure.database.session import set_session_factory
+    from app.shared.database.session import set_session_factory
 
     test_engine = create_async_engine(database_url, pool_pre_ping=True, future=True)
 
@@ -180,7 +180,7 @@ async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
 
 @pytest_asyncio.fixture
 async def uow(session: AsyncSession) -> AsyncIterator[object]:
-    from app.infrastructure.database.unit_of_work import UnitOfWork
+    from app.shared.unit_of_work.unit_of_work import UnitOfWork
 
     yield UnitOfWork(session)
 
